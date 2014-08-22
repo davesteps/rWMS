@@ -1,0 +1,10 @@
+Package: rWMS
+Type: Package
+Title: Classes and functions for WMS layers in R
+Version: 0.1
+Date: 2014-08-22
+Author: David Stephens
+Maintainer: davesteps@gmail.com 
+Description: Reads WMS capabilites XML and creates WMS class which contains 
+attributes for layers available from the data source. 
+License: GPL-3
