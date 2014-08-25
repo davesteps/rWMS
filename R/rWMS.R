@@ -1,6 +1,4 @@
-require(XML)
-require(RCurl)
-require(stringr)
+
 
 setClass("WMS",
          representation(
@@ -193,6 +191,9 @@ WMSstyle <- function(s,ns){
 }
 
 WMS <- function(url){
+  require(XML)
+  require(RCurl)
+  require(stringr)
   
   #url <- "http://localhost:8080/geoserver/ows?"#"
   #url <- 'http://148.252.96.22:8080/ncWMS-1.1/wms?'
