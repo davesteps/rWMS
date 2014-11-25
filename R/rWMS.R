@@ -150,9 +150,10 @@ setClass("WMSlayer",
            bbox='list',
            dims='list',
            dimValues='list',
-           startDate='character',
-           endDate='character',
-           timestamps='character',
+#            dateList='character',
+#            startDate='character',
+#            endDate='character',
+           #timestamps='character',
            styles='list',
            metadata='WMSmetadata'
          )
@@ -197,6 +198,9 @@ WMS <- function(url){
   
   #url <- "http://localhost:8080/geoserver/ows?"#"
   #url <- 'http://148.252.96.22:8080/ncWMS-1.1/wms?'
+  #url <- "http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-opt-modis_a-l3-kd490_1km_daily-rt-v01?"
+  #url <- "http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?"
+  
   #url <- 'http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?'#service=WMS&request=GetCapabilities'#"http://localhost:8080/geoserver/ows?"#"http://mis.myocean.org.ua:8080/thredds/wms/dataset-bs-mfc-instan-phys-for-v3?"
   #url <- "http://148.252.96.22:8081/geoserver/ows?"#service=wms&version=1.1.1&request=GetCapabilities
   
@@ -216,13 +220,32 @@ WMS <- function(url){
                                              })
                          names(dimVals) <- names(dims)
                          
+                         t <- dimVals['time'][[1]]
                          
-                         s <- gsub('P1D','',dimVals['time'])
-                         s1 <- gsub('T.*','',strsplit(s,'/')[[1]])
-                         t1 <- s1[[1]]
-                         t2 <- s1[[length(s1)]]
-                         ts <- unique(paste('T',gsub('.*T','',strsplit(s,'/')[[1]]),sep=''))
-                         
+#                          #class(t)
+#                          s <- ''
+#                          t1<- ''
+#                          t2 <- ''
+#                          t
+#                          if(!is.null(t)){
+#                           s <- strsplit(t,',')[[1]]
+#                           ri <- grep('/',s)
+#                           s <- strsplit(s,'/')
+#                          
+#                           s[ri] <- sapply(s[ri],FUN = function(x) {
+#                             sp <- strsplit(x,'T')
+#                             sq <- seq(from = as.Date(sp[[1]][1]),to = as.Date(sp[[2]][1]), by="day")
+#                              paste(sq,sp[[1]][2],sep='T')})
+#                          
+#                           s <- unlist(s)
+# #                         s <- gsub('P1D','',dimVals['time'])
+# #                          s1 <- gsub('T.*','',strsplit(s,'/')[[1]])
+#                           t1 <- s[1]
+#                           t2 <- s[length(s)]
+#                          }
+#                          #ts <- unique(paste('T',gsub('.*T','',strsplit(s,'/')[[1]]),sep=''))
+
+  
                          styles <- xpathSApply(doc = x, "ns:Style",namespaces =ns,fun = WMSstyle,ns)
                          names(styles) <- sapply(styles,FUN = function(x)x@name)
                          
@@ -238,17 +261,19 @@ WMS <- function(url){
                              bbox=xmlApply(getNodeSet(x,path = 'ns:BoundingBox',namespaces = ns),xmlAttrs),
                              dims=dims,
                              dimValues=dimVals,
-                             startDate=t1,
-                             endDate=t2,
-                             timestamps=ts,
+                             #dateList=s,
+                             #startDate=t1,
+                             #endDate=t2,
+                             #timestamps=ts,
                              styles=styles,
                              metadata=metadata
                              
                          )
                        })
-  
-  
-  
+
+
+  #l.att[[3]]@dimValues
+
   names(l.att) <- sapply(l.att,function(x) x@title)
   
   length(l.att)
@@ -323,7 +348,11 @@ layerParents <- function(wms){
   unlist(sapply(wms@layers,function(x) x@parent))  
 }
 
-getFeatureInfo <- function(url,lon,lat,layers,date=NULL,format,count=NULL){
+getFeatureInfo <- function(url,lon,lat,layers,
+                           date=NULL,
+                           format,
+                           count=NULL,
+                           elevation=NULL){
   
   url <- paste(url,
                'bbox=',lon,',',lat,
@@ -336,6 +365,7 @@ getFeatureInfo <- function(url,lon,lat,layers,date=NULL,format,count=NULL){
                "srs=EPSG:4326&",
                ifelse(is.null(count),'',paste('feature_count=',count,'&',sep='')),
                ifelse(is.null(date),'',paste('time=',date,'&',sep='')),
+               ifelse(is.null(elevation),'',paste('elevation=',elevation,'&',sep='')),
                'info_format=',format,'&',
                'height=2&X=1&Y=1',sep='')
   
@@ -350,3 +380,123 @@ getXMLVals <- function(xml){
   df$text
   
 }
+
+layerDates <- function(l){
+  t <- l@dimValues$time
+  
+  s <- strsplit(t,',')[[1]]
+  ri <- grep('/',s)
+  s <- strsplit(s,'/')
+  
+  tv <- sapply(s,function(x){strsplit(x[1],'T')[[1]][2]})
+  
+  s <- sapply(s,FUN = function(x) {
+    #x <- s[[1]]
+    sp <- strsplit(x,'T')
+    if(length(sp)>1){
+      as.character(seq(from = as.Date(sp[[1]][1]),to = as.Date(sp[[2]][1]), by="day"))
+    } else {
+      sp[[1]][1]
+    }
+  })
+  
+  if(class(s)!='list'){
+     s <- list(s)}
+  
+  si <- sapply(1:length(s),function(x)rep(x,length(s[[x]])))
+  
+  si <- unlist(si)
+  s <- unlist(s)
+  
+  names(si) <- s
+  
+  return(list(dates=si,times=tv))
+}
+
+
+# #not working
+# s <- WMS('http://myocean.smhi.se/thredds/wms/MyO_V3/BalticLatestForecast_PHYS?')
+# s <- WMS('http://www.ifremer.fr/thredds/wms/GLO-BLENDED_WIND_L4-OBS_FULL_TIME_SERIE?')
+# s <- WMS('http://thredds.met.no/thredds/wms/topaz/dataset-topaz4-arc-myoceanv2-be?')
+# s <- WMS('http://mis.myocean.org.ua:8080/thredds/wms/dataset-bs-mfc-instan-phys-for-v3?')
+# s <- WMS('http://atoll.cls.fr/opendap-cls-myocean/thredds/wms/dataset-duacs-nrt-global-j2-sla-l3?')
+# s <- WMS('http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-glo-opt-modis_a-l3-rrs412_4km_daily-rt-v01?')
+# s <- WMS('http://www.ifremer.fr/thredds/wms/CORIOLIS-GLOBAL-NRTOA-OBS_TIME_SERIE?')
+# 
+# #working
+# s <- WMS('http://atoll.mercator-ocean.fr/opendap-mercator-myocean/thredds/wms/global-analysis-bio-001-008-a?') need to add 3d
+# s <- WMS('http://data.ncof.co.uk/thredds/wms/METOFFICE-NWS-AF-PHYS-DAILY?')
+# s <- WMS('http://puertos.cesga.es:8080/thredds/wms/dataset-ibi-analysis-forecast-phys-005-001-daily?')
+# s <- WMS('http://gnoodap.bo.ingv.it/thredds/wms/myov03-med-ingv-ssh-an-fc?')
+# s <- WMS('http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?')
+# s <- WMS('http://thredds.met.no/thredds/wms/sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/ice_conc_north_aggregated?')
+# s <- WMS('http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-opt-modis_a-l3-kd490_1km_daily-rt-v01?')
+# 
+# 
+# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-chl-multi_cci-l3-oc5_1km_daily-rep-v02?")
+# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-chl-modis_a-l3-oc5_1km_daily-rt-v01?")
+# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-chl-multi-l4-oi_1km_daily-rt-v01?")
+# s <- WMS("http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?")
+# s <- WMS("http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-RAN-OBS-ANOM?")
+# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-opt-multi_cci-l3-rrs670_1km_daily-rep-v02?")
+# s <- WMS("http://tds0.ifremer.fr/thredds/wms/GLO-BLENDED_WIND_L4-V3-OBS_FULL_TIME_SERIE?")
+# 
+# 
+# s@url
+# layerNames(s)
+# s@queryLayerIndex
+# l <- s@layers[[3]]
+# 
+# l@title
+# l@dimValues
+# 
+# layerDates(l)
+# 
+
+
+# src <- WMS('http://148.252.96.22:8080/ncWMS-1.1/wms?')
+# to <- '2008-12-31'
+# from <- '2008-11-01'
+# lat <- 55.0783
+# lon <- 3.0184
+# layer <- "5/salt"
+# s <- src
+# z = '1.0'
+#wmsQuery(src = s,layer = layer ,lon = lon,lat =lat,from=from,to=to)
+
+wmsQuery <- function(src,layer,lon,lat,from=from,to=to){
+  # 
+  ###########################
+
+  i <- layerNames(s)==layer
+
+  l <- s@layers[s@queryLayerIndex][i][[1]]
+  
+  # does the layer have a time and elev
+  zaxis <- 'elevation'%in%names(l@dims)
+  time <- 'time'%in%names(l@dims)
+  
+  if(zaxis&is.null(z)){
+    return(print(paste('Choose z value:',l@dimValues$elevation)))}
+  if(!zaxis&!is.null(z)){
+    print('Not 3D layer, z ignored')}
+  
+  layerDates(l)
+  
+  
+  f <- grep('text',s@featFormat,value = T)[[1]]
+  
+  
+  
+  v <- getFeatureInfo(url=src@url,lon=lon,lat=lat,date = date,layers = layer,format=f)
+  
+  getXMLVals(v)
+  
+}
+ 
+
+
+
+
+
+

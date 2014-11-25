@@ -6,7 +6,7 @@ This R package reads the capabilites XML document associated with a WMS source a
 
 I created the package to allow an interface to WMS sources in [shiny](http://shiny.rstudio.com/) apps using [leaflet-shiny](https://github.com/davesteps/leaflet-shiny).
 
-[Example app](http://davesteps.shinyapps.io/marine_data_explorer/)
+[Example app](https://davesteps.shinyapps.io/wms_example/)
 
 
 ----
