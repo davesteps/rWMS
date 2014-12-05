@@ -7,3 +7,6 @@ Author: David Stephens
 Maintainer: David Stephens <davesteps@gmail.com>
 Description: Reads WMS capabilites XML and creates WMS class which contains attributes for layers available from the data source. 
 License: GPL-3
+Imports: RCurl,
+    stringr,
+    XML

@@ -1,1 +1,4 @@
 exportPattern("^[[:alpha:]]+")
+import('XML')
+import('RCurl')
+import('stringr')

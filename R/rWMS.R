@@ -70,8 +70,10 @@ setClass("WMSmetadata",
 )
 
 
+
 get_layerMetadata<- function(url,layer){
   #layer <- l.att[[3]]@name
+  #require(stringr)
   
   metaURL <- paste(url,"item=layerDetails&request=GetMetadata&layerName=",layer,sep='')
   
@@ -138,7 +140,8 @@ get_layerMetadata<- function(url,layer){
 
 
 layerinfo <- function(xml,ns,str){
-  as.character(xmlApply(getNodeSet(xml,path = str,namespaces = ns),xmlValue))}
+  as.character(xmlApply(getNodeSet(xml,path = str,namespaces = ns),
+                             xmlValue))}
 
 setClass("WMSlayer",
          representation(
@@ -173,7 +176,8 @@ setClass("WMSstyle",
 
 WMSstyle <- function(s,ns){
   
-  dim <- unlist(xmlApply(getNodeSet(s,path = 'ns:LegendURL',namespaces = ns),xmlAttrs))
+  dim <- unlist(xmlApply(getNodeSet(s,path = 'ns:LegendURL',namespaces = ns),
+                              xmlAttrs))
   url <- unlist(xmlApply(getNodeSet(s,path = 'ns:LegendURL/ns:OnlineResource',
                                     namespaces = ns),xmlAttrs))['href']
   
@@ -192,9 +196,9 @@ WMSstyle <- function(s,ns){
 }
 
 WMS <- function(url){
-  require(XML)
-  require(RCurl)
-  require(stringr)
+  #require(XML)
+  #require(RCurl)
+  #require(stringr)
   
   #url <- "http://localhost:8080/geoserver/ows?"#"
   #url <- 'http://148.252.96.22:8080/ncWMS-1.1/wms?'
@@ -203,7 +207,7 @@ WMS <- function(url){
   
   #url <- 'http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?'#service=WMS&request=GetCapabilities'#"http://localhost:8080/geoserver/ows?"#"http://mis.myocean.org.ua:8080/thredds/wms/dataset-bs-mfc-instan-phys-for-v3?"
   #url <- "http://148.252.96.22:8081/geoserver/ows?"#service=wms&version=1.1.1&request=GetCapabilities
-  
+
   capURL <- paste(url,"service=WMS&request=GetCapabilities",sep='')
   xp <- xmlParse(getURL(capURL))
   ns <- c(ns="http://www.opengis.net/wms")
