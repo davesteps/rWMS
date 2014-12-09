@@ -507,7 +507,7 @@ dateList <- function(start,end){
 }
 
 
-formatedDateString <- function(dates,ts,n=100){
+formatedDateString <- function(dates,ts,n=60){
   
   dl <- paste(dates,ts,sep='T')
   
