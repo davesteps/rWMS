@@ -467,40 +467,97 @@ layerDates <- function(l){
 # s <- src
 # z = '1.0'
 #wmsQuery(src = s,layer = layer ,lon = lon,lat =lat,from=from,to=to)
-
-wmsQuery <- function(src,layer,lon,lat,from=from,to=to){
-  # 
-  ###########################
-
-  i <- layerNames(s)==layer
-
-  l <- s@layers[s@queryLayerIndex][i][[1]]
-  
-  # does the layer have a time and elev
-  zaxis <- 'elevation'%in%names(l@dims)
-  time <- 'time'%in%names(l@dims)
-  
-  if(zaxis&is.null(z)){
-    return(print(paste('Choose z value:',l@dimValues$elevation)))}
-  if(!zaxis&!is.null(z)){
-    print('Not 3D layer, z ignored')}
-  
-  layerDates(l)
-  
-  
-  f <- grep('text',s@featFormat,value = T)[[1]]
-  
-  
-  
-  v <- getFeatureInfo(url=src@url,lon=lon,lat=lat,date = date,layers = layer,format=f)
-  
-  getXMLVals(v)
-  
-}
+# 
+# wmsQuery <- function(src,layer,lon,lat,from=from,to=to){
+#   # 
+#   ###########################
+# 
+#   i <- layerNames(s)==layer
+# 
+#   l <- s@layers[s@queryLayerIndex][i][[1]]
+#   
+#   # does the layer have a time and elev
+#   zaxis <- 'elevation'%in%names(l@dims)
+#   time <- 'time'%in%names(l@dims)
+#   
+#   if(zaxis&is.null(z)){
+#     return(print(paste('Choose z value:',l@dimValues$elevation)))}
+#   if(!zaxis&!is.null(z)){
+#     print('Not 3D layer, z ignored')}
+#   
+#   layerDates(l)
+#   
+#   
+#   f <- grep('text',s@featFormat,value = T)[[1]]
+#   
+#   
+#   
+#   v <- getFeatureInfo(url=src@url,lon=lon,lat=lat,date = date,layers = layer,format=f)
+#   
+#   getXMLVals(v)
+#   
+# }
  
 
 
+dateList <- function(start,end){
+  
+  seq(from = as.Date(start),to = as.Date(end), by="day")
+  
+}
 
+
+formatedDateString <- function(dates,ts,n=100){
+  
+  dl <- paste(dates,ts,sep='T')
+  
+  if(length(dl)>n){
+    dl <- split(dl, ceiling(seq_along(dl)/n))
+    
+    dl <- sapply(dl,function(x) paste(x,collapse = ','))
+    
+  } else {
+    
+    dl <- paste(dl,collapse = ',')
+    
+  }
+    
+  dl
+  
+}
+
+TDSquery <- function(TDS,from,to,lat,lon,lyr){
+  # given THREDD WMS object lat/lon and dates
+  # returns values
+#   TDS <- src
+#   from <- "2010-01-01"
+#   to <- "2010-03-01"
+#   lat <- 53.998
+#   lon <- -5.461
+#   lyr <- "analysed_sst"
+#   #####################################
+  
+  dr <- dateList(from,to)
+  
+  TDSlyr <- TDS@layers[TDS@queryLayerIndex][layerNames(TDS)==lyr][[1]]
+
+  TDSdate <- layerDates(TDSlyr)
+  
+  t <- TDSdate$times[TDSdate$dates[as.character(dr)]]
+  
+  dv <- formatedDateString(dr,t)
+  
+  if(length(dv)>1){
+    fi <- sapply(dv,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=lyr,format="text/xml")
+    vals <- unlist(sapply(fi,getXMLVals))
+  } else {
+    fi <- getFeatureInfo(url=TDS@url,lon=lon,lat=lat,date = dv,layers=lyr,format="text/xml")
+    vals <- getXMLVals(fi)
+  }
+  
+  data.frame(date=as.Date(dr),values=vals)
+  
+}
 
 
 
