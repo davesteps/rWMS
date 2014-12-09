@@ -526,7 +526,7 @@ formatedDateString <- function(dates,ts,n=60){
   
 }
 
-TDSquery <- function(TDS,from,to,lat,lon,lyr){
+TDSquery <- function(TDS,from,to,lat,lon,lyr,elevation=NULL,nmax=60){
   # given THREDD WMS object lat/lon and dates
   # returns values
 #   TDS <- src
@@ -545,19 +545,60 @@ TDSquery <- function(TDS,from,to,lat,lon,lyr){
   
   t <- TDSdate$times[TDSdate$dates[as.character(dr)]]
   
-  dv <- formatedDateString(dr,t)
+  dv <- formatedDateString(dr,t,nmax)
   
   if(length(dv)>1){
-    fi <- sapply(dv,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=lyr,format="text/xml")
+    fi <- sapply(dv,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=lyr,elevation = elevation,format="text/xml")
     vals <- unlist(sapply(fi,getXMLVals))
   } else {
-    fi <- getFeatureInfo(url=TDS@url,lon=lon,lat=lat,date = dv,layers=lyr,format="text/xml")
+    fi <- getFeatureInfo(url=TDS@url,lon=lon,lat=lat,date = dv,layers=lyr,elevation = elevation,format="text/xml")
     vals <- getXMLVals(fi)
   }
   
   data.frame(date=as.Date(dr),values=vals)
   
 }
+
+hasElevation <- function(l){'elevation'%in%names(l@dims)}
+
+
+#load("C:/Users/ds10/Dropbox/shiny_csv_reader/TDS.rdata")
+
+
+
+
+vertProfile <- function(TDS,lon,lat,layer,date){
+    #given: lat/lon/3dlayer/date
+    #returns all values in vertical profile 
+  
+  # lat <- 55.3
+  # lon <- 4.64
+  # layers <- "5/temp"
+  #elevation <- '1.0'
+  #date <- '2008-12-01'
+  
+  ###############################
+  
+  count <- NULL
+  format <- 'text/xml'
+  
+  l <- TDS@layers[TDS@queryLayerIndex][layerNames(TDS)==layer][[1]]
+  if(!hasElevation(l))
+    return(NULL)
+  
+  vl <- strsplit(l@dimValues$elevation,',')[[1]]
+  
+  TDSdate <- layerDates(l)
+  
+  t <- TDSdate$times[TDSdate$dates[date]]
+  t <- paste(date,t,sep='T')
+  
+  fi <- sapply(vl,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=layers,date=date,format=format,count=NULL)
+  vals <- unlist(sapply(fi,getXMLVals))
+  vals}
+
+
+#vertProfile(TDS,4.64,56.3,'5/temp','2008-06-01')
 
 
 
