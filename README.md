@@ -19,6 +19,8 @@ if (!require("devtools"))
   install.packages("devtools")
 devtools::install_github("rWMS", "davesteps")
 
+require(rWMS)
+
 src <- WMS('http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?')
 
 #use layerNames to examine the available variables on the source 
