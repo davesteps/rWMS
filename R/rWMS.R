@@ -560,9 +560,9 @@ TDSquery <- function(TDS,from,to,lat,lon,lyr,elevation=NULL,nmax=60){
 }
 
 hasElevation <- function(l){'elevation'%in%names(l@dims)}
+hasTime<-function(x){'time'%in%names(x@dims)}
 
 
-#load("C:/Users/ds10/Dropbox/shiny_csv_reader/TDS.rdata")
 
 
 
@@ -570,16 +570,17 @@ hasElevation <- function(l){'elevation'%in%names(l@dims)}
 vertProfile <- function(TDS,lon,lat,layer,date){
     #given: lat/lon/3dlayer/date
     #returns all values in vertical profile 
-  
-  # lat <- 55.3
-  # lon <- 4.64
-  # layers <- "5/temp"
-  #elevation <- '1.0'
-  #date <- '2008-12-01'
-  
+#   require(XML)
+#   require(RCurl)
+#   load("C:/Users/ds10/Dropbox/shiny_csv_reader/TDS.rdata")
+#   lat <- 55.75185#55.3
+#   lon <- 2.678604#4.64
+#   layer <- "5/salt"#"5/h"#"5/temp"#"5/elev""5/hcc" "5/bathymetry"
+#   date <- '2008-12-01'
+#   layerNames(TDS)
+  #vertProfile(TDS,,,,"2008-12-08T00:00:00.000Z")
   ###############################
   
-  count <- NULL
   format <- 'text/xml'
   
   l <- TDS@layers[TDS@queryLayerIndex][layerNames(TDS)==layer][[1]]
@@ -588,14 +589,16 @@ vertProfile <- function(TDS,lon,lat,layer,date){
   
   vl <- strsplit(l@dimValues$elevation,',')[[1]]
   
-  TDSdate <- layerDates(l)
+#   if(hasTime(l)){
+#     TDSdate <- layerDates(l)
+#     t <- TDSdate$times[TDSdate$dates[date]]
+#     t <- paste(date,t,sep='T')
+#   } else {t <- NULL}
   
-  t <- TDSdate$times[TDSdate$dates[date]]
-  t <- paste(date,t,sep='T')
-  
-  fi <- sapply(vl,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=layers,date=date,format=format,count=NULL)
+  fi <- sapply(vl,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=layer,date=date,format=format,count=NULL)
   vals <- unlist(sapply(fi,getXMLVals))
-  vals}
+  vals
+}
 
 
 #vertProfile(TDS,4.64,56.3,'5/temp','2008-06-01')
