@@ -418,96 +418,22 @@ layerDates <- function(l){
 }
 
 
-# #not working
-# s <- WMS('http://myocean.smhi.se/thredds/wms/MyO_V3/BalticLatestForecast_PHYS?')
-# s <- WMS('http://www.ifremer.fr/thredds/wms/GLO-BLENDED_WIND_L4-OBS_FULL_TIME_SERIE?')
-# s <- WMS('http://thredds.met.no/thredds/wms/topaz/dataset-topaz4-arc-myoceanv2-be?')
-# s <- WMS('http://mis.myocean.org.ua:8080/thredds/wms/dataset-bs-mfc-instan-phys-for-v3?')
-# s <- WMS('http://atoll.cls.fr/opendap-cls-myocean/thredds/wms/dataset-duacs-nrt-global-j2-sla-l3?')
-# s <- WMS('http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-glo-opt-modis_a-l3-rrs412_4km_daily-rt-v01?')
-# s <- WMS('http://www.ifremer.fr/thredds/wms/CORIOLIS-GLOBAL-NRTOA-OBS_TIME_SERIE?')
-# 
-# #working
-# s <- WMS('http://atoll.mercator-ocean.fr/opendap-mercator-myocean/thredds/wms/global-analysis-bio-001-008-a?') need to add 3d
-# s <- WMS('http://data.ncof.co.uk/thredds/wms/METOFFICE-NWS-AF-PHYS-DAILY?')
-# s <- WMS('http://puertos.cesga.es:8080/thredds/wms/dataset-ibi-analysis-forecast-phys-005-001-daily?')
-# s <- WMS('http://gnoodap.bo.ingv.it/thredds/wms/myov03-med-ingv-ssh-an-fc?')
-# s <- WMS('http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?')
-# s <- WMS('http://thredds.met.no/thredds/wms/sea_ice/SIW-OSISAF-GLO-SIT_SIE_SIC-OBS/ice_conc_north_aggregated?')
-# s <- WMS('http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-opt-modis_a-l3-kd490_1km_daily-rt-v01?')
-# 
-# 
-# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-chl-multi_cci-l3-oc5_1km_daily-rep-v02?")
-# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-chl-modis_a-l3-oc5_1km_daily-rt-v01?")
-# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-chl-multi-l4-oi_1km_daily-rt-v01?")
-# s <- WMS("http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-NRT-OBS-SST-V2?")
-# s <- WMS("http://data.ncof.co.uk/thredds/wms/METOFFICE-GLO-SST-L4-RAN-OBS-ANOM?")
-# s <- WMS("http://myocean.artov.isac.cnr.it/thredds/wms/dataset-oc-atl-opt-multi_cci-l3-rrs670_1km_daily-rep-v02?")
-# s <- WMS("http://tds0.ifremer.fr/thredds/wms/GLO-BLENDED_WIND_L4-V3-OBS_FULL_TIME_SERIE?")
-# 
-# 
-# s@url
-# layerNames(s)
-# s@queryLayerIndex
-# l <- s@layers[[3]]
-# 
-# l@title
-# l@dimValues
-# 
-# layerDates(l)
-# 
-
-
-# src <- WMS('http://148.252.96.22:8080/ncWMS-1.1/wms?')
-# to <- '2008-12-31'
-# from <- '2008-11-01'
-# lat <- 55.0783
-# lon <- 3.0184
-# layer <- "5/salt"
-# s <- src
-# z = '1.0'
-#wmsQuery(src = s,layer = layer ,lon = lon,lat =lat,from=from,to=to)
-# 
-# wmsQuery <- function(src,layer,lon,lat,from=from,to=to){
-#   # 
-#   ###########################
-# 
-#   i <- layerNames(s)==layer
-# 
-#   l <- s@layers[s@queryLayerIndex][i][[1]]
-#   
-#   # does the layer have a time and elev
-#   zaxis <- 'elevation'%in%names(l@dims)
-#   time <- 'time'%in%names(l@dims)
-#   
-#   if(zaxis&is.null(z)){
-#     return(print(paste('Choose z value:',l@dimValues$elevation)))}
-#   if(!zaxis&!is.null(z)){
-#     print('Not 3D layer, z ignored')}
-#   
-#   layerDates(l)
-#   
-#   
-#   f <- grep('text',s@featFormat,value = T)[[1]]
-#   
-#   
-#   
-#   v <- getFeatureInfo(url=src@url,lon=lon,lat=lat,date = date,layers = layer,format=f)
-#   
-#   getXMLVals(v)
-#   
-# }
- 
-
-
-dateList <- function(start,end){
+dateList <- function(start,end,by){
   
-  seq(from = as.Date(start),to = as.Date(end), by="day")
+  seq(from = as.Date(start),to = as.Date(end), by=by)
   
 }
 
 
-formatedDateString <- function(dates,ts,n=60){
+
+formattedDateString <- function(TDS,lyr,from=NULL,to=NULL,dates=NULL,n=60){
+  
+  if(is.null(dates)){
+    dates <- dateList(from,to)}
+  
+  TDSlyr <- TDS@layers[TDS@queryLayerIndex][layerNames(TDS)==lyr][[1]]
+  TDSdate <- layerDates(TDSlyr)
+  ts <- TDSdate$times[TDSdate$dates[as.character(dates)]]
   
   dl <- paste(dates,ts,sep='T')
   
@@ -526,10 +452,18 @@ formatedDateString <- function(dates,ts,n=60){
   
 }
 
-TDSquery <- function(TDS,from,to,lat,lon,lyr,elevation=NULL,nmax=60){
-  # given THREDD WMS object lat/lon and dates
+dateRange <- function(TDS,lyr){
+  
+  TDSlyr <- TDS@layers[TDS@queryLayerIndex][layerNames(TDS)==lyr][[1]]
+  TDSdate <- names(layerDates(TDSlyr)$dates)
+  c(TDSdate[1],tail(TDSdate,1))
+}
+
+
+TDSquery <- function(TDS,lat,lon,lyr,datestring,elevation=NULL){
+  # given THREDD WMS object lat/lon/elevation
+  # datestring is an output from formatteddateSttring
   # returns values
-#   TDS <- src
 #   from <- "2010-01-01"
 #   to <- "2010-03-01"
 #   lat <- 53.998
@@ -537,34 +471,21 @@ TDSquery <- function(TDS,from,to,lat,lon,lyr,elevation=NULL,nmax=60){
 #   lyr <- "analysed_sst"
 #   #####################################
   
-  dr <- dateList(from,to)
-  
-  TDSlyr <- TDS@layers[TDS@queryLayerIndex][layerNames(TDS)==lyr][[1]]
-
-  TDSdate <- layerDates(TDSlyr)
-  
-  t <- TDSdate$times[TDSdate$dates[as.character(dr)]]
-  
-  dv <- formatedDateString(dr,t,nmax)
-  
-  if(length(dv)>1){
-    fi <- sapply(dv,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=lyr,elevation = elevation,format="text/xml")
+  if(length(datestring)>1){
+    fi <- sapply(datestring,getFeatureInfo,url=TDS@url,lon=lon,lat=lat,layers=lyr,elevation = elevation,format="text/xml")
     vals <- unlist(sapply(fi,getXMLVals))
   } else {
-    fi <- getFeatureInfo(url=TDS@url,lon=lon,lat=lat,date = dv,layers=lyr,elevation = elevation,format="text/xml")
+    fi <- getFeatureInfo(url=TDS@url,lon=lon,lat=lat,date = datestring,layers=lyr,elevation = elevation,format="text/xml")
     vals <- getXMLVals(fi)
   }
-  
-  data.frame(date=as.Date(dr),values=vals)
-  
+
+  data.frame(date=as.Date(unlist(strsplit(datestring,','))),values=vals)
+ 
 }
+
 
 hasElevation <- function(l){'elevation'%in%names(l@dims)}
 hasTime<-function(x){'time'%in%names(x@dims)}
-
-
-
-
 
 
 vertProfile <- function(TDS,lon,lat,layer,date){
@@ -599,6 +520,19 @@ vertProfile <- function(TDS,lon,lat,layer,date){
   vals <- unlist(sapply(fi,getXMLVals))
   vals
 }
+
+TDSqueryAll <- function(src,lyr,lat,lon,by,n=60){
+#     src=sst
+#     lyr='analysed_sst'
+#     lat=25.8
+#     lon=-87.55
+#     n=60
+#     by='month'
+  ######################
+  dr <- dateRange(src,lyr)
+  dl <- dateList(start = dr[1],end =dr[2],by = by)
+  datestring <- formattedDateString(TDS = src,lyr = lyr,dates = dl,n = n)
+  TDSquery(src,lat,lon,lyr,datestring = datestring)}
 
 
 #vertProfile(TDS,4.64,56.3,'5/temp','2008-06-01')
