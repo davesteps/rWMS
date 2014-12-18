@@ -6,7 +6,7 @@ This R package reads the capabilites XML document associated with a WMS source a
 
 I created the package to allow an interface to WMS sources in [shiny](http://shiny.rstudio.com/) apps using [leaflet-shiny](https://github.com/davesteps/leaflet-shiny).
 
-[Example app](https://davesteps.shinyapps.io/wms_example/)
+[Example app](https://davesteps.shinyapps.io/SST1/)
 
 
 ----
@@ -17,7 +17,7 @@ Extract some sea surface temperature data from this [THREDDS WMS source](http://
 ```r
 if (!require("devtools"))
   install.packages("devtools")
-devtools::install_github("rWMS", "davesteps")
+devtools::install_github("davesteps/rWMS")
 
 require(rWMS)
 
